@@ -1,0 +1,326 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Vaishu 💘</title>
+  <style>
+    :root{
+      --bg1:#ff4d6d;
+      --bg2:#ff8fab;
+      --card: rgba(255,255,255,0.18);
+      --stroke: rgba(255,255,255,0.35);
+      --txt:#fff;
+    }
+    *{ box-sizing:border-box; }
+    body{
+      margin:0;
+      min-height:100vh;
+      display:grid;
+      place-items:center;
+      font-family: system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
+      color:var(--txt);
+      background: radial-gradient(circle at top, var(--bg2), var(--bg1));
+      overflow:hidden;
+    }
+    .card{
+      width:min(600px, 92vw);
+      padding:28px 22px;
+      background: var(--card);
+      border:1px solid var(--stroke);
+      border-radius:20px;
+      backdrop-filter: blur(10px);
+      box-shadow:0 18px 50px rgba(0,0,0,0.2);
+      text-align:center;
+      position:relative;
+      z-index:2;
+    }
+    h1{
+      margin:0 0 10px;
+      font-size: clamp(26px, 4vw, 40px);
+      letter-spacing:0.3px;
+    }
+    p{ margin:0 0 18px; opacity:0.95; font-size:18px; }
+    .btns{
+      display:flex;
+      justify-content:center;
+      gap:14px;
+      flex-wrap:wrap;
+      margin-top:6px;
+    }
+    button{
+      border:0;
+      padding:12px 18px;
+      border-radius:14px;
+      font-size:18px;
+      font-weight:800;
+      cursor:pointer;
+      transition: transform 0.12s ease, filter 0.12s ease;
+      user-select:none;
+      position:relative;
+    }
+    button:active{ transform: scale(0.96); }
+    #yesBtn{
+      background:#2ee59d;
+      color:#073b2a;
+      box-shadow:0 10px 26px rgba(46,229,157,0.35);
+    }
+    #noBtn{
+      background: rgba(255,255,255,0.9);
+      color:#7a0030;
+      box-shadow:0 10px 26px rgba(0,0,0,0.15);
+    }
+    #status{
+      margin-top:16px;
+      font-size:20px;
+      min-height:32px;
+      font-weight:800;
+    }
+    .celebrate{
+      display:none;
+      margin-top:18px;
+      font-size:24px;
+      font-weight:900;
+      text-align:center;
+    }
+    .celebrate span{
+      display:inline-block;
+      animation: pop 0.8s ease both;
+    }
+    @keyframes pop{
+      0%{ transform: scale(0.6); opacity:0; }
+      100%{ transform: scale(1); opacity:1; }
+    }
+
+    /* floating background hearts */
+    .hearts{ position:absolute; inset:0; pointer-events:none; opacity:0.25; z-index:1; }
+    .heart{
+      position:absolute;
+      width:18px; height:18px;
+      background:#fff;
+      transform: rotate(45deg);
+      border-radius:4px;
+      animation: floatUp 7s linear infinite;
+      filter: drop-shadow(0 6px 14px rgba(0,0,0,0.2));
+    }
+    .heart::before, .heart::after{
+      content:"";
+      position:absolute;
+      width:18px; height:18px;
+      background:#fff;
+      border-radius:50%;
+    }
+    .heart::before{ left:-9px; top:0; }
+    .heart::after{ top:-9px; left:0; }
+    @keyframes floatUp{
+      0%{ transform: translateY(30vh) rotate(45deg); opacity:0; }
+      10%{ opacity:0.9; }
+      100%{ transform: translateY(-120vh) rotate(45deg); opacity:0; }
+    }
+
+    /* Emoji Rain (on YES) */
+    #heartRain{
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      overflow: hidden;
+      z-index: 3;
+    }
+    .rainEmoji{
+      position: absolute;
+      top: -12vh;
+      animation: fall linear forwards;
+      will-change: transform;
+      filter: drop-shadow(0 8px 18px rgba(0,0,0,0.25));
+      user-select: none;
+    }
+    @keyframes fall{
+      to{
+        transform: translateY(125vh) rotate(360deg);
+        opacity: 0.95;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="card">
+    <h1 id="question">Vaishu, will you be my Valentine? 💘</h1>
+    <p id="sub">Click carefully 😌</p>
+
+    <div class="btns" id="btnRow">
+      <button id="yesBtn">YES 💖</button>
+      <button id="noBtn">NO 🙃</button>
+    </div>
+
+    <div id="status"></div>
+
+    <div class="celebrate" id="celebrate">
+      <span>HA!! I knew it 😌💖 I love you moreeeee!! 🎉</span>
+    </div>
+  </div>
+
+  <!-- background floating hearts -->
+  <div class="hearts" id="hearts"></div>
+
+  <!-- emoji rain container -->
+  <div id="heartRain"></div>
+
+  <script>
+    // Escalating "NO" lines (keeps going)
+    const noMessages = [
+      "Really?? 😳",
+      "You sure, Vaishu?? 🥺",
+      "Like… 100% sure?? 😭",
+      "Are you clicking NO by mistake?? 😤",
+      "Okay wait—think again 😌",
+      "Vaishu plssss 😭💗",
+      "This is getting suspicious… 🤨",
+      "You’re just testing me, right? 😏",
+      "NO again?? heartbreak loading… 💔",
+      "Last chance (real) 😤",
+      "Last chance (FINAL) 😤😤",
+      "Last chance (FINAL FINAL) 😤😤😤",
+      "Vaishu… don’t do this to me 😭",
+      "I’m gonna cry in 4K 🥲",
+      "Okay, I’ll ask nicely… will you click YES? 🥺👉👈",
+      "Broooooo 😭 click YES",
+      "I’m calling Cupid on you 🏹",
+      "If you click NO again, I’m eating your chocolates 😌",
+      "Vaishu you better click YES 😤💗",
+      "Okay okay, enough… CLICK YES 😤😤",
+      "I’ll wait… until you click YES 😌",
+      "You’re still here?? 😭",
+      "I’m not giving up 😤",
+      "Fine. One tiny YES? 🥺",
+      "I KNEW YOU LOVE ME… now prove it 😌💖",
+      "At this point… it’s personal 😤",
+      "Vaishu please yaar 😭💞",
+      "NO? okay I’m removing your Wi-Fi 😌",
+      "One more NO and I’m telling Cupid 😤🏹",
+      "Stoppp 😭 just press YES 💖"
+    ];
+
+    let noCount = 0;
+    let celebrating = false;
+
+    const statusEl = document.getElementById("status");
+    const questionEl = document.getElementById("question");
+    const celebrateEl = document.getElementById("celebrate");
+    const yesBtn = document.getElementById("yesBtn");
+    const noBtn = document.getElementById("noBtn");
+    const btnRow = document.getElementById("btnRow");
+
+    function swapButtons() {
+      if (btnRow.children[0].id === "yesBtn") {
+        btnRow.insertBefore(noBtn, yesBtn);
+      } else {
+        btnRow.insertBefore(yesBtn, noBtn);
+      }
+    }
+
+    noBtn.addEventListener("click", () => {
+      const msg = noMessages[Math.min(noCount, noMessages.length - 1)];
+      statusEl.textContent = msg;
+      noCount++;
+
+      // YES grows each time
+      const scale = 1 + Math.min(noCount, 10) * 0.07;
+      yesBtn.style.transform = `scale(${scale})`;
+
+      // NO runs away after a few clicks
+      if (noCount >= 3) {
+        const dx = (Math.random() * 180) - 90;
+        const dy = (Math.random() * 120) - 60;
+        noBtn.style.transform = `translate(${dx}px, ${dy}px)`;
+      }
+
+      // After 7 NOs, start swapping buttons sometimes 😈
+      if (noCount >= 7 && Math.random() < 0.6) {
+        swapButtons();
+      }
+
+      // After 12 NOs, make NO smaller a bit
+      if (noCount >= 12) {
+        const shrink = Math.max(0.55, 1 - (noCount - 12) * 0.04);
+        noBtn.style.transform += ` scale(${shrink})`;
+      }
+    });
+
+    // --------- Mixed Emoji Rain (on YES) ----------
+    const heartRain = document.getElementById("heartRain");
+    const emojiSet = ["❤️","💖","💘","💕","💗","💞","😍","😘","🌹","✨"];
+
+    function startEmojiRain(durationMs = 12000) {
+      const start = Date.now();
+
+      const spawn = setInterval(() => {
+        if (Date.now() - start > durationMs) {
+          clearInterval(spawn);
+          // allow remaining emojis to finish falling, then clear
+          setTimeout(() => { heartRain.innerHTML = ""; }, 6500);
+          return;
+        }
+
+        // spawn 2–5 emojis per tick
+        const batch = 2 + Math.floor(Math.random() * 4);
+        for (let i = 0; i < batch; i++) {
+          const e = document.createElement("div");
+          e.className = "rainEmoji";
+          e.textContent = emojiSet[Math.floor(Math.random() * emojiSet.length)];
+
+          const left = Math.random() * 100;          // vw
+          const size = 18 + Math.random() * 34;      // px
+          const dur  = 3.2 + Math.random() * 3.2;    // seconds
+          const drift = (Math.random() * 90) - 45;   // px
+          const rot = Math.random() * 360;           // deg
+          const opa = 0.75 + Math.random() * 0.25;
+
+          e.style.left = left + "vw";
+          e.style.fontSize = size + "px";
+          e.style.animationDuration = dur + "s";
+          e.style.opacity = opa.toFixed(2);
+          // initial transform includes some sideways drift + rotation
+          e.style.transform = `translateX(${drift}px) rotate(${rot}deg)`;
+
+          heartRain.appendChild(e);
+          setTimeout(() => e.remove(), (dur + 0.25) * 1000);
+        }
+      }, 140);
+    }
+
+    yesBtn.addEventListener("click", () => {
+      if (celebrating) return;
+      celebrating = true;
+
+      questionEl.textContent = "She said YESSS!! 💞";
+      statusEl.textContent = ""; // prevent overlap
+      celebrateEl.style.display = "block";
+
+      yesBtn.disabled = true;
+      noBtn.disabled = true;
+      yesBtn.style.filter = "brightness(0.95)";
+      noBtn.style.filter = "brightness(0.95)";
+
+      startEmojiRain(12000);
+    });
+
+    // Floating white hearts in background
+    const heartsWrap = document.getElementById("hearts");
+    function spawnHearts(count=18){
+      heartsWrap.innerHTML = "";
+      for(let i=0;i<count;i++){
+        const h=document.createElement("div");
+        h.className="heart";
+        h.style.left=Math.random()*100+"vw";
+        h.style.animationDelay=(Math.random()*5)+"s";
+        h.style.animationDuration=(5+Math.random()*5)+"s";
+        h.style.opacity=0.2+Math.random()*0.35;
+        h.style.transform=`rotate(45deg) scale(${0.7+Math.random()*1.2})`;
+        heartsWrap.appendChild(h);
+      }
+    }
+    spawnHearts(18);
+  </script>
+</body>
+</html>
